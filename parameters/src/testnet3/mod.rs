@@ -103,7 +103,9 @@ macro_rules! insert_key {
 }
 
 // Inclusion
+
 impl_remote!(InclusionProver, REMOTE_URL, "resources/", "inclusion", "prover");
+
 impl_remote!(InclusionVerifier, REMOTE_URL, "resources/", "inclusion", "verifier");
 
 /// The function name for the inclusion circuit.

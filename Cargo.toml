@@ -158,7 +158,7 @@ optional = true
 [dependencies.snarkvm-synthesizer]
 path = "./synthesizer"
 version = "0.10.3"
-default-features = false
+# default-features = false
 optional = true
 
 [dependencies.snarkvm-utilities]
@@ -257,3 +257,6 @@ lto = "thin"
 incremental = true
 debug = true
 debug-assertions = true
+
+[patch.crates-io]
+aleo-std = { git = "https://github.com/geofmureithi/aleo-std" }

@@ -173,13 +173,18 @@ wasm = [
   "wasm-bindgen-futures"
 ]
 cuda = [ "snarkvm-algorithms-cuda" ]
+parallel = [
+  "snarkvm-fields/parallel",
+  "snarkvm-utilities/parallel"
+]
 profiler = [ "aleo-std/profiler" ]
 crypto_hash = [ ]
 fft = [ ]
 msm = [ ]
 polycommit = [ "crypto_hash", "fft", "msm", "rand_core" ]
 polycommit_wasm = [ "polycommit", "snarkvm-parameters/wasm" ]
-polycommit_full = [ "polycommit", "snarkvm-parameters/default" ]
+polycommit_full = [ "polycommit", "snarkvm-parameters/no_std_out" ]
+# polycommit_full = [ "polycommit", "snarkvm-parameters/default" ]
 serial = [
   "snarkvm-curves/serial",
   "snarkvm-fields/serial",

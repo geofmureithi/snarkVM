@@ -13,9 +13,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with the snarkVM library. If not, see <https://www.gnu.org/licenses/>.
-
-#[cfg(debug_assertions)]
-use crate::Stack;
 use crate::{
     BlockStorage,
     BlockStore,
@@ -58,6 +55,20 @@ impl<N: Network, B: BlockStorage<N>> From<&BlockStore<N, B>> for Query<N, B> {
     }
 }
 
+#[cfg(feature = "request")]
+impl<N: Network, B: BlockStorage<N>> From<reqwest::Url> for Query<N, B> {
+    fn from(url: reqwest::Url) -> Self {
+        Self::REST(url.to_string())
+    }
+}
+
+#[cfg(feature = "request")]
+impl<N: Network, B: BlockStorage<N>> From<&reqwest::Url> for Query<N, B> {
+    fn from(url: &reqwest::Url) -> Self {
+        Self::REST(url.to_string())
+    }
+}
+
 impl<N: Network, B: BlockStorage<N>> From<String> for Query<N, B> {
     fn from(url: String) -> Self {
         Self::REST(url)
@@ -83,6 +94,11 @@ impl<N: Network, B: BlockStorage<N>> Query<N, B> {
             Self::VM(block_store) => {
                 block_store.get_program(program_id)?.ok_or_else(|| anyhow!("Program {program_id} not found in storage"))
             }
+            #[cfg(not(feature = "request"))]
+            _ => {
+                bail!("Unsupported request")
+            }
+            #[cfg(feature = "request")]
             #[cfg(not(feature = "wasm"))]
             Self::REST(url) => match N::ID {
                 3 => Ok(Self::get_request(&format!("{url}/testnet3/program/{program_id}"))?.into_json()?),
@@ -97,6 +113,12 @@ impl<N: Network, B: BlockStorage<N>> Query<N, B> {
     pub fn current_state_root(&self) -> Result<N::StateRoot> {
         match self {
             Self::VM(block_store) => Ok(block_store.current_state_root()),
+            #[cfg(not(feature = "request"))]
+            #[cfg(not(feature = "wasm"))]
+            _ => {
+                bail!("Unsupported request")
+            }
+            #[cfg(feature = "request")]
             #[cfg(not(feature = "wasm"))]
             Self::REST(url) => match N::ID {
                 3 => Ok(Self::get_request(&format!("{url}/testnet3/latest/stateRoot"))?.into_json()?),
@@ -111,6 +133,11 @@ impl<N: Network, B: BlockStorage<N>> Query<N, B> {
     pub fn get_state_path_for_commitment(&self, commitment: &Field<N>) -> Result<StatePath<N>> {
         match self {
             Self::VM(block_store) => block_store.get_state_path_for_commitment(commitment),
+            #[cfg(not(feature = "request"))]
+            _ => {
+                bail!("Unsupported request")
+            }
+            #[cfg(feature = "request")]
             #[cfg(not(feature = "wasm"))]
             Self::REST(url) => match N::ID {
                 3 => Ok(Self::get_request(&format!("{url}/testnet3/statePath/{commitment}"))?.into_json()?),
@@ -121,6 +148,7 @@ impl<N: Network, B: BlockStorage<N>> Query<N, B> {
         }
     }
 
+    #[cfg(feature = "request")]
     /// Performs a GET request to the given URL.
     #[cfg(not(feature = "wasm"))]
     fn get_request(url: &str) -> Result<ureq::Response> {
@@ -642,7 +670,7 @@ impl<N: Network> InclusionAssignment<N> {
         A::assert(state_path.verify(&is_global, &local_state_root));
 
         #[cfg(debug_assertions)]
-        Stack::log_circuit::<A, _>(&format!("State Path for {}", self.serial_number));
+        crate::Stack::log_circuit::<A, _>(&format!("State Path for {}", self.serial_number));
 
         // Eject the assignment and reset the circuit environment.
         Ok(A::eject_assignment_and_reset())

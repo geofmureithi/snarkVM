@@ -40,7 +40,11 @@ path = "benches/transaction.rs"
 harness = false
 
 [features]
-default = [ ]
+default = [ "request" ]
+parallel = [
+  "snarkvm-fields/parallel",
+  "snarkvm-utilities/parallel"
+]
 aleo-cli = [ ]
 cuda = [ "snarkvm-algorithms/cuda" ]
 serial = [
@@ -52,6 +56,7 @@ serial = [
 ]
 setup = [ ]
 timer = [ "aleo-std/timer" ]
+request = ["reqwest"] # reqwest cannot compile in fortanix, so when using fortanix target use default-features = false
 wasm = [ ]
 
 [dependencies.circuit]
@@ -95,7 +100,7 @@ version = "1"
 version = "0.10"
 default-features = false
 
-[dependencies.colored]
+[target."cfg(not(target_vendor = \"fortanix\"))".dependencies.colored]
 version = "2"
 
 [dependencies.indexmap]
@@ -119,6 +124,13 @@ version = "0.8"
 
 [dependencies.rayon]
 version = "1"
+# optional = true
+
+[target."cfg(not(target_vendor = \"fortanix\"))".dependencies.reqwest]
+version = "0.11"
+default-features = false
+features = [ "blocking", "json" ]
+optional = true
 
 [dependencies.serde]
 version = "1.0"
@@ -133,6 +145,7 @@ version = "0.1"
 [dependencies.ureq]
 version = "2.6.2"
 features = [ "json" ]
+default-features = false
 
 [dev-dependencies.console]
 package = "snarkvm-console"
